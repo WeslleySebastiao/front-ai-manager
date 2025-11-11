@@ -1,9 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createAgente } from "../../../services/agentService";
+import { getTools } from "../../../services/toolService";
 import { useNavigate } from "react-router-dom";
 
 export default function CriarNovoAgente() {
   const navigate = useNavigate();
+
+  // Estado para as ferramentas disponíveis (vindas do backend)
+  const [toolsAvailable, setToolsAvailable] = useState<
+    { id: string; label: string; description?: string; icon?: string }[]
+  >([]);
+
+  // Estado do formulário
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -18,11 +26,15 @@ export default function CriarNovoAgente() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  // 🔹 Atualiza campos de texto e selects
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  // 🔹 Alterna seleção das ferramentas
   function handleToolToggle(tool: string) {
     setForm((prev) => ({
       ...prev,
@@ -32,7 +44,40 @@ export default function CriarNovoAgente() {
     }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  // 🔹 Busca ferramentas do backend
+  useEffect(() => {
+    async function fetchTools() {
+      try {
+        const response = await getTools(); // <-- serviço já faz GET /list_tools
+        console.log("📦 Resposta completa do backend:", response);
+
+        // Corrige para pegar o campo certo do objeto
+        const toolsArray = Array.isArray(response?.tools)
+          ? response.tools
+          : [];
+
+        console.log("🔍 Lista final de ferramentas:", toolsArray);
+
+        // Mapeia para o formato usado na UI
+        const parsed = toolsArray.map((tool: any) => ({
+          id: tool.name,
+          label: tool.name,
+          description: tool.description || "Sem descrição disponível.",
+          icon: "build_circle",
+        }));
+
+        setToolsAvailable(parsed);
+      } catch (err) {
+        console.error("❌ Erro ao carregar ferramentas:", err);
+        setToolsAvailable([]);
+      }
+    }
+
+    fetchTools();
+  }, []);
+
+  // 🔹 Envia os dados do formulário
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
@@ -47,10 +92,10 @@ export default function CriarNovoAgente() {
         prompt: form.prompt.trim(),
         temperature: Number(form.temperature),
         max_tokens: Number(form.max_tokens),
-        tools: form.tools.length > 0 ? form.tools : [], // garante lista
+        tools: form.tools.length > 0 ? form.tools : [],
       };
 
-      console.log("📦 Enviando payload:", payload);
+      console.log("📤 Enviando payload:", payload);
 
       const response = await createAgente(payload);
       console.log("✅ Resposta do backend:", response);
@@ -63,7 +108,7 @@ export default function CriarNovoAgente() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -71,10 +116,15 @@ export default function CriarNovoAgente() {
         Criar Novo Agente
       </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-[#1C1F27]/60 p-6 rounded-xl border border-gray-200 dark:border-[#3b4354]/40 shadow-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-white dark:bg-[#1C1F27]/60 p-6 rounded-xl border border-gray-200 dark:border-[#3b4354]/40 shadow-sm"
+      >
         {/* Nome */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nome</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Nome
+          </label>
           <input
             type="text"
             name="name"
@@ -87,7 +137,9 @@ export default function CriarNovoAgente() {
 
         {/* Descrição */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Descrição
+          </label>
           <textarea
             name="description"
             value={form.description}
@@ -100,7 +152,9 @@ export default function CriarNovoAgente() {
 
         {/* Provider */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Provider</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Provider
+          </label>
           <select
             name="provider"
             value={form.provider}
@@ -115,7 +169,9 @@ export default function CriarNovoAgente() {
 
         {/* Modelo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Modelo</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Modelo
+          </label>
           <select
             name="model"
             value={form.model}
@@ -131,7 +187,9 @@ export default function CriarNovoAgente() {
 
         {/* Prompt */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prompt</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Prompt
+          </label>
           <textarea
             name="prompt"
             value={form.prompt}
@@ -143,26 +201,57 @@ export default function CriarNovoAgente() {
 
         {/* Tools */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ferramentas Permitidas</label>
-          <div className="grid grid-cols-2 gap-2">
-            {["web_search", "calculator", "calendar_api"].map((tool) => (
-              <label key={tool} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={form.tools.includes(tool)}
-                  onChange={() => handleToolToggle(tool)}
-                  className="form-checkbox h-4 w-4 text-primary border-gray-400 dark:border-[#5a6376]"
-                />
-                <span className="text-gray-700 dark:text-gray-300">{tool}</span>
-              </label>
-            ))}
-          </div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            Ferramentas Permitidas
+          </label>
+
+          {toolsAvailable.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Nenhuma ferramenta disponível.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {toolsAvailable.map((tool) => (
+                <button
+                  key={tool.id}
+                  type="button"
+                  onClick={() => handleToolToggle(tool.id)}
+                  className={`flex flex-col items-start gap-2 p-4 rounded-xl border transition-all duration-200 text-left 
+                    ${
+                      form.tools.includes(tool.id)
+                        ? "border-primary bg-primary/10 dark:bg-primary/20 text-primary"
+                        : "border-gray-300 dark:border-[#3b4354] bg-background-light dark:bg-[#101622] text-gray-700 dark:text-gray-300 hover:border-primary/50"
+                    }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`material-symbols-outlined ${
+                        form.tools.includes(tool.id)
+                          ? "text-primary"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {tool.icon}
+                    </span>
+                    <span className="text-base font-semibold leading-tight">
+                      {tool.label}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {tool.description}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Temperature & Tokens */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Temperatura</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Temperatura
+            </label>
             <input
               type="number"
               name="temperature"
@@ -175,7 +264,9 @@ export default function CriarNovoAgente() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tokens Máximos</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Tokens Máximos
+            </label>
             <input
               type="number"
               name="max_tokens"
@@ -186,6 +277,7 @@ export default function CriarNovoAgente() {
           </div>
         </div>
 
+        {/* Botão e Mensagem */}
         <div className="flex justify-end">
           <button
             type="submit"
@@ -197,7 +289,9 @@ export default function CriarNovoAgente() {
         </div>
 
         {message && (
-          <p className="text-center text-sm text-gray-700 dark:text-gray-300 mt-4">{message}</p>
+          <p className="text-center text-sm text-gray-700 dark:text-gray-300 mt-4">
+            {message}
+          </p>
         )}
       </form>
     </div>

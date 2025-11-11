@@ -10,26 +10,21 @@ export async function getAgent(id) {
   return response.data
 }
 
-export async function createAgent(agentData) {
-  const response = await api.post('/agent', agentData)
-  return response.data
-}
-
 export async function deleteAgent(id) {
   const response = await api.delete(`/agentes/${id}`)
   return response.data
 }
 
 export async function createAgente(data: {
-  name: string
-  description: string
-  provider: string
-  model: string
-  tools: string[]
-  prompt: string
-  temperature: int
-  max_tokens: float
+  name: string;
+  description: string;
+  provider: string;
+  model: string;
+  tools: string[];
+  prompt: string;
+  temperature: number;
+  max_tokens: number;
 }) {
-  const response = await api.post('/agent', data)
-  return response.data
+  const response = await api.post("/agent", data);
+  return response.data;
 }
