@@ -19,3 +19,17 @@ export async function deleteAgent(id) {
   const response = await api.delete(`/agentes/${id}`)
   return response.data
 }
+
+export async function createAgente(data: {
+  name: string
+  description: string
+  provider: string
+  model: string
+  tools: string[]
+  prompt: string
+  temperature: int
+  max_tokens: float
+}) {
+  const response = await api.post('/agent', data)
+  return response.data
+}
