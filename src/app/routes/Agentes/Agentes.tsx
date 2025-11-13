@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import api from "../../../services/api";
-
+console.log("🔵 Agentes.tsx MONTADO");
 interface Agente {
   id: string;
   name: string;
@@ -21,10 +21,21 @@ export default function Agentes() {
     async function fetchAgentes() {
       try {
         const response = await api.get("/agent");
-        console.log("📡 Dados recebidos de /agentes:", response.data);
-        setAgentes(response.data);
+        console.log("📡 Dados recebidos de /agent:", response.data);
+
+        // Garante que SEMPRE seja array:
+        const lista =
+          Array.isArray(response.data)
+            ? response.data
+            : response.data?.agents ||
+              response.data?.items ||
+              response.data?.data ||
+              [];
+
+        setAgentes(lista);
       } catch (error) {
         console.error("❌ Erro ao buscar agentes:", error);
+        setAgentes([]); // evita quebra
       } finally {
         setLoading(false);
       }
@@ -69,19 +80,17 @@ export default function Agentes() {
 
             <div className="space-y-1 text-sm">
               <p>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Modelo:</span>{" "}
-                {agente.model}
+                <span className="font-medium">Modelo:</span> {agente.model}
               </p>
               <p>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Provider:</span>{" "}
-                {agente.provider}
+                <span className="font-medium">Provider:</span> {agente.provider}
               </p>
               <p>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Temperatura:</span>{" "}
+                <span className="font-medium">Temperatura:</span>{" "}
                 {agente.temperature}
               </p>
               <p>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Tokens Máx:</span>{" "}
+                <span className="font-medium">Tokens Máx:</span>{" "}
                 {agente.max_tokens}
               </p>
             </div>
