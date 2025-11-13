@@ -1,7 +1,9 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../../services/api";
+
 console.log("🔵 Agentes.tsx MONTADO");
+
 interface Agente {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ interface Agente {
 }
 
 export default function Agentes() {
+  const navigate = useNavigate();
   const [agentes, setAgentes] = useState<Agente[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,7 +72,8 @@ export default function Agentes() {
         {agentes.map((agente) => (
           <div
             key={agente.id}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C1F27]/60 p-6 shadow-sm hover:shadow-md transition-all duration-200"
+            onClick={() => navigate(`/agentes/${agente.id}`)}
+            className="cursor-pointer rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C1F27]/60 p-6 shadow-sm hover:shadow-md transition-all duration-200"
           >
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               {agente.name}

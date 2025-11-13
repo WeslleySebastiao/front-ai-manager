@@ -5,6 +5,7 @@ import AppLayout from './app/layout/AppLayout'
 import Dashboard from './app/routes/Dashboard'
 import Agentes from './app/routes/Agentes/Agentes'
 import CriarNovoAgente from './app/routes/Agentes/CriarNovoAgente'
+import AgentChat from './app/routes/Agentes/AgentChat'   // <-- ADICIONADO
 import './index.css'
 
 const router = createBrowserRouter([
@@ -13,8 +14,9 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <Dashboard /> },
-      { path: '/agentes', element: <Agentes /> },
-      { path: '/agentes/novo', element: <CriarNovoAgente /> },
+      { path: 'agentes', element: <Agentes /> },             // ❗ remove barra extra
+      { path: 'agentes/novo', element: <CriarNovoAgente /> },// ❗ remove barra extra
+      { path: 'agentes/:id', element: <AgentChat /> },        // <-- ROTA CORRETA
     ],
   },
 ])
