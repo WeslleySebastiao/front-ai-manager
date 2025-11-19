@@ -2,14 +2,14 @@ import api from './api'
 
 export async function getDashboardData() {
   try {
-    // Busca apenas a lista de agentes (endpoint real)
+    
     const agentsRes = await api.get('/agent')
 
-    // Gera valores temporários para status e execuções
+    
     const fakeStatus = 'online'
-    const fakeExecucoes = Math.floor(Math.random() * 200) // só pra visual
+    const fakeExecucoes = Math.floor(Math.random() * 200)
 
-    // Retorna dados compatíveis com o Dashboard
+    
     return {
       agentes: agentsRes.data.length,
       mcpStatus: fakeStatus,

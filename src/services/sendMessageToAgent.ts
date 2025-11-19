@@ -17,15 +17,15 @@ export interface AgentMessageResponse {
 function extractText(result: any): string {
   if (!result) return "(sem resposta)";
 
-  // 📌 Caso seja string direta
+  
   if (typeof result === "string") return result;
 
-  // 📌 Caso seja algo como { content: "texto" }
+  
   if (typeof result.content === "string") {
     return result.content;
   }
 
-  // 📌 Caso seja array de conteúdos do LangChain
+  
   if (Array.isArray(result.content)) {
     return result.content
       .map((c: any) => {
@@ -37,7 +37,7 @@ function extractText(result: any): string {
       .join("\n");
   }
 
-  // 📌 Caso padrão — transformar objeto em texto
+  
   return JSON.stringify(result, null, 2);
 }
 
@@ -56,7 +56,7 @@ export async function sendMessageToAgent(
 
   console.log("📥 Resposta RAW do backend:", data);
 
-  // Extrair a string corretamente independente da estrutura
+  
   const cleanedResult = extractText(data.result);
 
   console.log("✨ Mensagem limpa extraída:", cleanedResult);
