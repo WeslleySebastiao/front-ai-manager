@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../services/api";
 
-console.log("🔵 Agentes.tsx MONTADO");
-
 interface Agente {
   id: string;
   name: string;
@@ -82,20 +80,22 @@ export default function Agentes() {
               {agente.description}
             </p>
 
-            <div className="space-y-1 text-sm">
+            <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
               <p>
-                <span className="font-medium">Modelo:</span> {agente.model}
+                <span className="font-medium text-gray-900 dark:text-gray-200">Modelo:</span>{" "}
+                <span className="text-gray-600 dark:text-gray-400">{agente.model}</span>
               </p>
               <p>
-                <span className="font-medium">Provider:</span> {agente.provider}
+                <span className="font-medium text-gray-900 dark:text-gray-200">Provider:</span>{" "}
+                <span className="text-gray-600 dark:text-gray-400">{agente.provider}</span>
               </p>
               <p>
-                <span className="font-medium">Temperatura:</span>{" "}
-                {agente.temperature}
+                <span className="font-medium text-gray-900 dark:text-gray-200">Temperatura:</span>{" "}
+                <span className="text-gray-600 dark:text-gray-400">{agente.temperature}</span>
               </p>
               <p>
-                <span className="font-medium">Tokens Máx:</span>{" "}
-                {agente.max_tokens}
+                <span className="font-medium text-gray-900 dark:text-gray-200">Tokens Máx:</span>{" "}
+                <span className="text-gray-600 dark:text-gray-400">{agente.max_tokens}</span>
               </p>
             </div>
           </div>

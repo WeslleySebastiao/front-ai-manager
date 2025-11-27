@@ -49,26 +49,26 @@ export default function CriarNovoAgente() {
     async function fetchTools() {
       try {
         const response = await getTools(); // <-- serviço já faz GET /list_tools
-        console.log("📦 Resposta completa do backend:", response);
+        console.log("Resposta completa do backend:", response);
 
         // Corrige para pegar o campo certo do objeto
         const toolsArray = Array.isArray(response?.tools)
           ? response.tools
           : [];
 
-        console.log("🔍 Lista final de ferramentas:", toolsArray);
+        console.log("Lista final de ferramentas:", toolsArray);
 
         // Mapeia para o formato usado na UI
         const parsed = toolsArray.map((tool: any) => ({
           id: tool.name,
           label: tool.name,
-          description: tool.description || "Sem descrição disponível.",
+          description: tool.schema.description || "Sem descrição disponível.",
           icon: "build_circle",
         }));
 
         setToolsAvailable(parsed);
       } catch (err) {
-        console.error("❌ Erro ao carregar ferramentas:", err);
+        console.error("Erro ao carregar ferramentas:", err);
         setToolsAvailable([]);
       }
     }
