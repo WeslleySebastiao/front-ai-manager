@@ -18,6 +18,8 @@ export default function AgenteChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [typing, setTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -25,13 +27,14 @@ export default function AgenteChat() {
   // LOAD HISTORY FROM LOCALSTORAGE
   // ------------------------------
   useEffect(() => {
-    if (!agentId) return;
-
     const saved = localStorage.getItem(`chat-${agentId}`);
     if (saved) {
-      setMessages(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      setMessages(parsed.messages ?? []);
+      setSessionId(parsed.sessionId ?? null);
       setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
     }
+
   }, [agentId]);
 
   // ------------------------------
@@ -40,9 +43,12 @@ export default function AgenteChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     if (agentId) {
-      localStorage.setItem(`chat-${agentId}`, JSON.stringify(messages));
+      localStorage.setItem(
+        `chat-${agentId}`,
+        JSON.stringify({ messages, sessionId })
+      );
     }
-  }, [messages, agentId]);
+  }, [messages, agentId, sessionId]);
 
   if (!agentId) {
     return (
@@ -87,12 +93,15 @@ export default function AgenteChat() {
     setLoading(true);
 
     try {
-      const data = await sendMessageToAgent(agentId!, userMessage.text);
+      const data = await sendMessageToAgent(agentId!, userMessage.text, sessionId);
+
+      // ✅ guardar session_id devolvido pelo backend
+      setSessionId(data.session_id);
 
       const agentMessage: ChatMessage = {
         id: crypto.randomUUID(),
         sender: "agent",
-        text: data.result ?? "(sem resposta)",
+        text: data.response ?? "(sem resposta)",
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -106,8 +115,18 @@ export default function AgenteChat() {
     } finally {
       setTyping(false);
       setLoading(false);
+    } 
+  }
+
+  function handleClearChat() {
+  setMessages([]);
+  setSessionId(null);
+
+  if (agentId) {
+    localStorage.removeItem(`chat-${agentId}`);
     }
   }
+
 
   // ------------------------------
   // RENDER
@@ -131,12 +150,22 @@ export default function AgenteChat() {
             </span>
           </h1>
         </div>
+        <div className="flex items-center gap-3">
+          
+          <button
+              onClick={handleClearChat}
+              className="px-3 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100"
+            >
+              Limpar chat
+          </button>
 
-        {(loading || typing) && (
-          <span className="text-xs text-blue-500 animate-pulse">
-            Agente digitando...
-          </span>
-        )}
+          {(loading || typing) && (
+            <span className="text-xs text-blue-500 animate-pulse">
+              Agente digitando...
+            </span>
+          )}
+        </div>
+
       </header>
 
       {/* MESSAGES */}
