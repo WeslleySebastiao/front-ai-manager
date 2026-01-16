@@ -338,10 +338,10 @@ export default function Dashboard() {
         <div className="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10">
           <p className="text-gray-600 dark:text-gray-400 text-base font-medium">Dica rápida</p>
           <p className="text-gray-900 dark:text-white text-lg font-semibold">
-            Classifique por atrasos e desculpas e culpe o “top 1”
+            All-time por enquanto. Detalhes depois, se Deus quiser.
           </p>
           <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Esse dashboard é all-time. Se quiser depois, a gente adiciona drill-down por agente (drawer) e filtros de log.
+            Se quiser depois, a gente adiciona drill-down por agente e filtros de log (porque sofrimento sem filtro não dá).
           </p>
         </div>
       </div>
