@@ -6,8 +6,8 @@ export default function Sidebar() {
     { label: 'Dashboard', icon: 'dashboard', href: '/' },
     { label: 'Agentes', icon: 'smart_toy', href: '/agentes', exact: true },
     { label: 'Novo Agente', icon: 'add_circle', href: '/agentes/novo' },
-    { label: 'Ferramentas', icon: 'construction', href: '/ferramentas' },
-    { label: 'Configurações', icon: 'settings', href: '/configuracoes' },
+    { label: 'Em breve', icon: 'construction', href: '/ferramentas' },
+    { label: 'Em breve', icon: 'settings', href: '/configuracoes' },
   ]
 
   return (
