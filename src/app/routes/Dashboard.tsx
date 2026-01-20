@@ -341,7 +341,7 @@ export default function Dashboard() {
             All-time por enquanto. Detalhes depois, se Deus quiser.
           </p>
           <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Se quiser depois, a gente adiciona drill-down por agente e filtros de log (porque sofrimento sem filtro não dá).
+            Nota: adiciona drill-down por agente e filtros de log (porque sofrimento sem filtro não dá).
           </p>
         </div>
       </div>
