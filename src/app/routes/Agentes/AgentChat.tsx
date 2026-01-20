@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { sendMessageToAgent } from "../../../services/sendMessageToAgent";
+import ThemeToggle from "../../components/ThemeToggle";
+
 
 type ChatMessage = {
   id: string;
@@ -20,8 +22,21 @@ export default function AgenteChat() {
   const [typing, setTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-
   const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ trava o scroll da página SOMENTE enquanto estiver no chat
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevHeight = document.body.style.height;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100dvh";
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.height = prevHeight;
+    };
+  }, []);
 
   // ------------------------------
   // LOAD HISTORY FROM LOCALSTORAGE
@@ -34,7 +49,6 @@ export default function AgenteChat() {
       setSessionId(parsed.sessionId ?? null);
       setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
     }
-
   }, [agentId]);
 
   // ------------------------------
@@ -115,128 +129,162 @@ export default function AgenteChat() {
     } finally {
       setTyping(false);
       setLoading(false);
-    } 
-  }
-
-  function handleClearChat() {
-  setMessages([]);
-  setSessionId(null);
-
-  if (agentId) {
-    localStorage.removeItem(`chat-${agentId}`);
     }
   }
 
+  function handleClearChat() {
+    setMessages([]);
+    setSessionId(null);
+
+    if (agentId) {
+      localStorage.removeItem(`chat-${agentId}`);
+    }
+  }
 
   // ------------------------------
   // RENDER
   // ------------------------------
   return (
-    <div className="flex flex-col h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    /**
+     * ✅ Importante:
+     * - AppLayout tem padding p-6/lg:p-10; aqui usamos -m-6/lg:-m-10 para o chat ocupar a viewport inteira.
+     * - overflow-hidden aqui garante que só as mensagens rolam (no <main>).
+     * - header + footer ficam travados (shrink-0).
+     */
+    <div className="-m-6 lg:-m-10">
+      <div className="flex flex-col h-[100dvh] overflow-hidden bg-transparent text-slate-900 dark:text-slate-100">
+        {/* HEADER (TRAVADO) */}
+        <header className="shrink-0 px-6 py-4 border-b border-slate-200/40 dark:border-white/10">
+          <div className="flex items-center justify-between gap-3">
+            {/* ESQUERDA: Voltar + Título */}
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => navigate("/agentes")}
+                className="px-3 py-2 text-sm rounded-lg bg-slate-100/80 hover:bg-slate-200/80 text-slate-800 dark:bg-white/10 dark:hover:bg-white/15 dark:text-slate-100"
+              >
+                ← Voltar
+              </button>
 
-      {/* HEADER */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 backdrop-blur-md bg-white/70 dark:bg-slate-900/50">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/agentes")}
-            className="px-2 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100"
-          >
-            ← Voltar
-          </button>
-          <h1 className="text-lg font-semibold">
-            Chat com agente{" "}
-            <span className="text-slate-500 dark:text-slate-400">
-              #{agentId}
-            </span>
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
-          
-          <button
-              onClick={handleClearChat}
-              className="px-3 py-1 text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100"
-            >
-              Limpar chat
-          </button>
+              <h1 className="text-lg font-semibold truncate">
+                Chat com agente{" "}
+                <span className="text-slate-500 dark:text-slate-400">#{agentId}</span>
+              </h1>
 
-          {(loading || typing) && (
-            <span className="text-xs text-blue-500 animate-pulse">
-              Agente digitando...
-            </span>
-          )}
-        </div>
+              {(loading || typing) && (
+                <span className="hidden sm:inline text-xs text-blue-500 animate-pulse">
+                  Agente digitando...
+                </span>
+              )}
+            </div>
 
-      </header>
+            {/* DIREITA: Limpar chat (à esquerda) + ThemeToggle (no canto) */}
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={handleClearChat}
+                className="px-3 py-2 text-sm rounded-lg bg-slate-100/80 hover:bg-slate-200/80 text-slate-800 dark:bg-white/10 dark:hover:bg-white/15 dark:text-slate-100"
+              >
+                Limpar chat
+              </button>
 
-      {/* MESSAGES */}
-      <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${
-              msg.sender === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm shadow-sm whitespace-pre-wrap ${
-                msg.sender === "user"
-                  ? "bg-blue-600 text-white rounded-br-sm"
-                  : "bg-slate-100 text-slate-900 rounded-bl-sm dark:bg-slate-800 dark:text-slate-100"
-              }`}
-            >
-              <div className="text-[10px] uppercase tracking-wide text-slate-300 mb-1 flex items-center justify-between">
-                {msg.sender === "user" ? "Você" : "Agente"}
-                <span className="text-[9px] opacity-80">{msg.time}</span>
-              </div>
-              {msg.text}
+              <ThemeToggle />
             </div>
           </div>
-        ))}
 
-        {/* TYPING DOTS */}
-        {typing && (
-          <div className="flex justify-start">
-            <div className="px-3 py-2 bg-slate-200 dark:bg-slate-800 rounded-2xl text-xs flex gap-1">
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span>
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150"></span>
-              <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-300"></span>
+          {/* typing no mobile */}
+          {(loading || typing) && (
+            <div className="sm:hidden mt-2 text-xs text-blue-500 animate-pulse">
+              Agente digitando...
+            </div>
+          )}
+        </header>
+
+
+        {/* MESSAGES (ÚNICO SCROLL) */}
+        <main className="flex-1 min-h-0 overflow-y-auto">
+          <div className="mx-auto w-full max-w-3xl px-6 py-6 space-y-4">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${
+                  msg.sender === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div
+                  className={[
+                    "max-w-[85%] sm:max-w-[75%]",
+                    "rounded-2xl px-4 py-2 text-sm shadow-sm whitespace-pre-wrap",
+                    msg.sender === "user"
+                      ? "bg-blue-600 text-white rounded-br-md"
+                      : "bg-slate-100 text-slate-900 rounded-bl-md dark:bg-slate-800/70 dark:text-slate-100 border border-slate-200/50 dark:border-white/10",
+                  ].join(" ")}
+                >
+                  <div
+                    className={[
+                      "text-[10px] uppercase tracking-wide mb-1 flex items-center justify-between gap-4",
+                      msg.sender === "user"
+                        ? "text-blue-100/80"
+                        : "text-slate-500 dark:text-slate-400",
+                    ].join(" ")}
+                  >
+                    <span>{msg.sender === "user" ? "Você" : "Agente"}</span>
+                    <span className="text-[9px] opacity-80 normal-case tracking-normal">
+                      {msg.time}
+                    </span>
+                  </div>
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+
+            {/* TYPING DOTS */}
+            {typing && (
+              <div className="flex justify-start">
+                <div className="px-3 py-2 bg-slate-200/70 dark:bg-slate-800/70 rounded-2xl text-xs flex gap-1 border border-slate-200/40 dark:border-white/10">
+                  <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                  <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150" />
+                  <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-300" />
+                </div>
+              </div>
+            )}
+
+            <div ref={bottomRef} />
+          </div>
+        </main>
+
+        {/* ERROR (TRAVADO, ACIMA DO INPUT) */}
+        {error && (
+          <div className="shrink-0 mx-auto w-full max-w-3xl px-6 pb-2">
+            <div className="px-3 py-2 text-xs text-red-600 bg-red-50/80 border border-red-200 rounded-xl dark:text-red-400 dark:bg-red-950/30 dark:border-red-900">
+              {error}
             </div>
           </div>
         )}
 
-        <div ref={bottomRef} />
-      </main>
+        {/* INPUT (TRAVADO) */}
+        <footer className="shrink-0 px-6 py-5">
+          <div className="mx-auto w-full max-w-3xl">
+            <form onSubmit={handleSend}>
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/70 dark:bg-black/20 backdrop-blur-md px-3 py-2">
+                <input
+                  type="text"
+                  className="flex-1 bg-transparent px-2 py-1 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
+                  placeholder="Digite sua mensagem..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
 
-      {/* ERROR BAR */}
-      {error && (
-        <div className="px-4 py-2 text-xs text-red-600 bg-red-50 border-t border-red-200 dark:text-red-400 dark:bg-red-950/40 dark:border-red-900">
-          {error}
-        </div>
-      )}
-
-      {/* INPUT BAR */}
-      <form
-        onSubmit={handleSend}
-        className="border-t border-slate-200 dark:border-slate-800 px-4 py-3 flex gap-2 items-center bg-slate-50 dark:bg-slate-950 backdrop-blur-md"
-      >
-        <input
-          type="text"
-          className="flex-1 rounded-xl bg-white border border-slate-300 px-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 
-          focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-          dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:placeholder:text-slate-500"
-          placeholder="Digite sua mensagem..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-
-        <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          className="px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 transition-colors"
-        >
-          {loading ? "···" : "Enviar"}
-        </button>
-      </form>
+                <button
+                  type="submit"
+                  disabled={loading || !input.trim()}
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 transition-colors"
+                >
+                  {loading ? "···" : "Enviar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

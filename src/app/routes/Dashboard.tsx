@@ -140,7 +140,7 @@ export default function Dashboard() {
         const [ov, agents, runs] = await Promise.all([
           getDashboardOverview(null),
           getTotalsByAgent(),
-          getLastRuns({ limit: 30 }),
+          getLastRuns({ limit: 5 }),
         ]);
 
         setOverview({
