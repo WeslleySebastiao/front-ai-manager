@@ -336,7 +336,7 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/10">
-          <p className="text-gray-600 dark:text-gray-400 text-base font-medium">Dica rápida</p>
+          <p className="text-gray-600 dark:text-gray-400 text-base font-medium">Nota:</p>
           <p className="text-gray-900 dark:text-white text-lg font-semibold">
             All-time por enquanto. Detalhes depois, se Deus quiser.
           </p>
