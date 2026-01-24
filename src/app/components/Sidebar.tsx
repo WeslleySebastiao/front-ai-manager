@@ -8,7 +8,7 @@ export default function Sidebar() {
     { label: 'Dashboard', icon: 'dashboard', href: '/' },
     { label: 'Agentes', icon: 'smart_toy', href: '/agentes', exact: true },
     { label: 'Novo Agente', icon: 'add_circle', href: '/agentes/novo' },
-    { label: 'Em breve', icon: 'construction', href: '/ferramentas' },
+    { label: 'PR Reviews', icon: 'construction', href: '/pr-reviews' },
     { label: 'Em breve', icon: 'settings', href: '/configuracoes' },
   ]
 

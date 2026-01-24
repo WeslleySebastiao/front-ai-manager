@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { sendMessageToAgent } from "../../../services/sendMessageToAgent";
 import ThemeToggle from "../../components/ThemeToggle";
-
+import { MarkdownRenderer } from "../../components/markdown";
 
 type ChatMessage = {
   id: string;
@@ -42,12 +42,16 @@ export default function AgenteChat() {
   // LOAD HISTORY FROM LOCALSTORAGE
   // ------------------------------
   useEffect(() => {
-    const saved = localStorage.getItem(`chat-${agentId}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setMessages(parsed.messages ?? []);
-      setSessionId(parsed.sessionId ?? null);
-      setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
+    try {
+      const saved = localStorage.getItem(`chat-${agentId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setMessages(parsed.messages ?? []);
+        setSessionId(parsed.sessionId ?? null);
+        setTimeout(() => bottomRef.current?.scrollIntoView(), 50);
+      }
+    } catch {
+      // se corromper, ignora
     }
   }, [agentId]);
 
@@ -145,12 +149,6 @@ export default function AgenteChat() {
   // RENDER
   // ------------------------------
   return (
-    /**
-     * ✅ Importante:
-     * - AppLayout tem padding p-6/lg:p-10; aqui usamos -m-6/lg:-m-10 para o chat ocupar a viewport inteira.
-     * - overflow-hidden aqui garante que só as mensagens rolam (no <main>).
-     * - header + footer ficam travados (shrink-0).
-     */
     <div className="-m-6 lg:-m-10">
       <div className="flex flex-col h-[100dvh] overflow-hidden bg-transparent text-slate-900 dark:text-slate-100">
         {/* HEADER (TRAVADO) */}
@@ -177,7 +175,7 @@ export default function AgenteChat() {
               )}
             </div>
 
-            {/* DIREITA: Limpar chat (à esquerda) + ThemeToggle (no canto) */}
+            {/* DIREITA: Limpar chat + ThemeToggle */}
             <div className="flex items-center gap-3 shrink-0">
               <button
                 onClick={handleClearChat}
@@ -198,21 +196,19 @@ export default function AgenteChat() {
           )}
         </header>
 
-
         {/* MESSAGES (ÚNICO SCROLL) */}
         <main className="flex-1 min-h-0 overflow-y-auto">
           <div className="mx-auto w-full max-w-3xl px-6 py-6 space-y-4">
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={[
-                    "max-w-[85%] sm:max-w-[75%]",
-                    "rounded-2xl px-4 py-2 text-sm shadow-sm whitespace-pre-wrap",
+                    "min-w-0 max-w-[85%] sm:max-w-[75%]",
+                    "rounded-2xl px-4 py-2 text-sm shadow-sm",
+                    "break-words overflow-hidden",
                     msg.sender === "user"
                       ? "bg-blue-600 text-white rounded-br-md"
                       : "bg-slate-100 text-slate-900 rounded-bl-md dark:bg-slate-800/70 dark:text-slate-100 border border-slate-200/50 dark:border-white/10",
@@ -231,7 +227,21 @@ export default function AgenteChat() {
                       {msg.time}
                     </span>
                   </div>
-                  {msg.text}
+
+                  {msg.sender === "agent" ? (
+                    <div
+                      className="
+                        mt-1 min-w-0
+                        [&_pre]:max-w-full [&_pre]:overflow-x-auto
+                        [&_pre]:rounded-lg [&_pre]:p-3
+                        [&_code]:break-words
+                      "
+                    >
+                      <MarkdownRenderer content={msg.text} />
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                  )}
                 </div>
               </div>
             ))}
