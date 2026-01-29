@@ -129,7 +129,7 @@ export default function AgenteChat() {
       setMessages((prev) => [...prev, agentMessage]);
     } catch (err) {
       console.error(err);
-      setError("Erro ao falar com o agente. Veja o console/backend.");
+      setError("Erro ao falar com o agente.");
     } finally {
       setTyping(false);
       setLoading(false);

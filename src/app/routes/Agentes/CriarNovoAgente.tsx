@@ -49,14 +49,11 @@ export default function CriarNovoAgente() {
     async function fetchTools() {
       try {
         const response = await getTools(); // <-- serviço já faz GET /list_tools
-        console.log("Resposta completa do backend:", response);
 
         // Corrige para pegar o campo certo do objeto
         const toolsArray = Array.isArray(response?.tools)
           ? response.tools
           : [];
-
-        console.log("Lista final de ferramentas:", toolsArray);
 
         // Mapeia para o formato usado na UI
         const parsed = toolsArray.map((tool: any) => ({
@@ -84,7 +81,7 @@ export default function CriarNovoAgente() {
 
     try {
       const payload = {
-        id: "", // o backend espera esse campo
+        id: null, // o backend espera esse campo
         name: form.name.trim(),
         description: form.description.trim(),
         provider: form.provider,
@@ -95,16 +92,12 @@ export default function CriarNovoAgente() {
         tools: form.tools.length > 0 ? form.tools : [],
       };
 
-      console.log("📤 Enviando payload:", payload);
-
       const response = await createAgente(payload);
-      console.log("✅ Resposta do backend:", response);
-
       setMessage("✅ Agente criado com sucesso!");
       setTimeout(() => navigate("/agentes"), 1000);
     } catch (err: any) {
-      console.error("❌ Erro ao criar agente:", err.response?.data || err);
-      setMessage("❌ Falha ao criar o agente. Verifique o console.");
+      console.error("Erro ao criar agente:", err.response?.data || err);
+      setMessage("Falha ao criar o agente.");
     } finally {
       setLoading(false);
     }

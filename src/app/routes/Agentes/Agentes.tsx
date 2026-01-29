@@ -22,7 +22,6 @@ export default function Agentes() {
     async function fetchAgentes() {
       try {
         const response = await api.get("/agent");
-        console.log("📡 Dados recebidos de /agent:", response.data);
 
         // Garante que SEMPRE seja array:
         const lista =
