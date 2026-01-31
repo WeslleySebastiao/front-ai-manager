@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { sendMessageToAgent } from "../../../services/sendMessageToAgent";
 import ThemeToggle from "../../components/ThemeToggle";
 import { MarkdownRenderer } from "../../components/markdown";
+import api from "../../../services/api";
 
 type ChatMessage = {
   id: string;
@@ -11,9 +12,24 @@ type ChatMessage = {
   time: string;
 };
 
+type LocationState = {
+  agentName?: string;
+};
+
+type Agente = {
+  id: string;
+  name: string;
+  description?: string;
+  provider?: string;
+  model?: string;
+};
+
 export default function AgenteChat() {
   const { id: agentId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const state = (location.state as LocationState | null) ?? null;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -22,6 +38,7 @@ export default function AgenteChat() {
   const [typing, setTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
+  const [agentName, setAgentName] = useState<string>(state?.agentName ?? "");
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   // ✅ trava o scroll da página SOMENTE enquanto estiver no chat
@@ -37,6 +54,58 @@ export default function AgenteChat() {
       document.body.style.height = prevHeight;
     };
   }, []);
+
+  // ✅ sempre que trocar agenteId, tenta resolver nome:
+  // 1) pelo state
+  // 2) fallback via API (para refresh/link direto)
+  useEffect(() => {
+    if (!agentId) return;
+
+    // prioridade: state
+    const fromState = (location.state as LocationState | null)?.agentName ?? "";
+    if (fromState) {
+      setAgentName(fromState);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchAgentName() {
+      try {
+        // Tenta endpoint individual primeiro (se existir)
+        try {
+          const r = await api.get(`/agent/${agentId}`);
+          const data = r.data;
+          const name = data?.name ?? data?.agent?.name ?? "";
+          if (!cancelled && name) setAgentName(name);
+          if (name) return;
+        } catch {
+          // ignora e tenta lista
+        }
+
+        // fallback: pega lista e filtra
+        const response = await api.get("/agent");
+        const lista: Agente[] =
+          Array.isArray(response.data)
+            ? response.data
+            : response.data?.agents ||
+              response.data?.items ||
+              response.data?.data ||
+              [];
+
+        const found = lista.find((a) => a.id === agentId);
+        if (!cancelled && found?.name) setAgentName(found.name);
+      } catch (e) {
+        // se falhar, não quebra o chat: fica só com o ID
+        console.error("❌ Erro ao resolver nome do agente:", e);
+      }
+    }
+
+    fetchAgentName();
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId, location.state]);
 
   // ------------------------------
   // LOAD HISTORY FROM LOCALSTORAGE
@@ -113,7 +182,6 @@ export default function AgenteChat() {
     try {
       const data = await sendMessageToAgent(agentId!, userMessage.text, sessionId);
 
-      // ✅ guardar session_id devolvido pelo backend
       setSessionId(data.session_id);
 
       const agentMessage: ChatMessage = {
@@ -164,8 +232,10 @@ export default function AgenteChat() {
               </button>
 
               <h1 className="text-lg font-semibold truncate">
-                Chat com agente{" "}
-                <span className="text-slate-500 dark:text-slate-400">#{agentId}</span>
+                Agente: {" "}
+                <span className="text-slate-900 dark:text-slate-100">
+                  {agentName || "agente"}
+                </span>{" "}
               </h1>
 
               {(loading || typing) && (
@@ -202,7 +272,9 @@ export default function AgenteChat() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${
+                  msg.sender === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
                   className={[

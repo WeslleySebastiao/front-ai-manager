@@ -1,3 +1,4 @@
+// src/app/routes/Agentes/Agentes/index.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../services/api";
@@ -11,6 +12,7 @@ interface Agente {
   prompt: string;
   temperature: number;
   max_tokens: number;
+  tools?: string[];
 }
 
 export default function Agentes() {
@@ -23,7 +25,6 @@ export default function Agentes() {
       try {
         const response = await api.get("/agent");
 
-        // Garante que SEMPRE seja array:
         const lista =
           Array.isArray(response.data)
             ? response.data
@@ -35,7 +36,7 @@ export default function Agentes() {
         setAgentes(lista);
       } catch (error) {
         console.error("❌ Erro ao buscar agentes:", error);
-        setAgentes([]); // evita quebra
+        setAgentes([]);
       } finally {
         setLoading(false);
       }
@@ -69,12 +70,29 @@ export default function Agentes() {
         {agentes.map((agente) => (
           <div
             key={agente.id}
-            onClick={() => navigate(`/agentes/${agente.id}`)}
-            className="cursor-pointer rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C1F27]/60 p-6 shadow-sm hover:shadow-md transition-all duration-200"
+            onClick={() => navigate(`/agentes/${agente.id}`, {state: { agentName: agente.name },})}
+            className="relative cursor-pointer rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1C1F27]/60 p-6 shadow-sm hover:shadow-md transition-all duration-200"
           >
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            {/* Botão editar */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/agentes/${agente.id}/editar`);
+              }}
+              className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-[#101622]/60 hover:bg-gray-50 dark:hover:bg-[#101622] transition"
+              title="Editar agente"
+              aria-label="Editar agente"
+            >
+              <span className="material-symbols-outlined text-gray-700 dark:text-gray-200">
+                edit
+              </span>
+            </button>
+
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 pr-10">
               {agente.name}
             </h2>
+
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               {agente.description}
             </p>

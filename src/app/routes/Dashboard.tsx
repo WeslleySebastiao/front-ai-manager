@@ -137,7 +137,12 @@ function Sparkline({
   );
 }
 
-function TrendBadge({ deltaPct }: { deltaPct: number | null }) {
+type TrendBadgeProps = {
+  deltaPct: number | null;
+  higherIsBetter?: boolean; // default: true (ex: sucesso, throughput)
+};
+
+function TrendBadge({ deltaPct, higherIsBetter = true }: TrendBadgeProps) {
   if (deltaPct == null) {
     return (
       <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border border-slate-500/30 text-slate-300 bg-slate-500/10">
@@ -146,17 +151,24 @@ function TrendBadge({ deltaPct }: { deltaPct: number | null }) {
     );
   }
 
-  const up = deltaPct >= 0;
-  const cls = up
+  // ícone = direção REAL do delta
+  const isUp = deltaPct >= 0;
+
+  // cor = se foi "bom" ou "ruim"
+  const isGood = higherIsBetter ? deltaPct >= 0 : deltaPct <= 0;
+
+  const cls = isGood
     ? "border-emerald-500/30 text-emerald-300 bg-emerald-500/10"
     : "border-rose-500/30 text-rose-300 bg-rose-500/10";
+
+  const sign = deltaPct > 0 ? "+" : "";
 
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold border ${cls}`}>
       <span className="material-symbols-outlined text-[14px] leading-none">
-        {up ? "trending_up" : "trending_down"}
+        {isUp ? "trending_up" : "trending_down"}
       </span>
-      {Math.abs(deltaPct).toFixed(1)}%
+      {sign}{Math.abs(deltaPct).toFixed(1)}%
     </span>
   );
 }
@@ -438,7 +450,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between gap-3">
             <p className="text-gray-600 dark:text-gray-400 text-base font-medium">Latência média</p>
             {/* pra latência, subir é ruim → mas aqui é só indicação */}
-            <TrendBadge deltaPct={trends.latencyDeltaPct != null ? -trends.latencyDeltaPct : null} />
+            <TrendBadge deltaPct={trends.latencyDeltaPct} higherIsBetter={false} />
           </div>
           <p className="text-gray-900 dark:text-white text-3xl font-bold">
             {formatMs(totals?.avg_latency_ms_total)}
