@@ -26,6 +26,9 @@ const MODELS_BY_PROVIDER: Record<string, { value: string; label: string }[]> = {
   ],
   anthropic: [
     { value: "claude-3-sonnet", label: "Claude 3 Sonnet" },
+    { value: "claude-3-5-haiku", label: "Claude 3 Haiku" },
+    { value: "claude-opus-4-5", label: "Claude Opus 4.5" },
+    { value: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
   ],
   google: [
     { value: "gemini-pro", label: "Gemini Pro" },
