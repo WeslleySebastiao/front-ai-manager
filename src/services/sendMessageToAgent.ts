@@ -12,7 +12,7 @@ export async function sendMessageToAgent(
 ): Promise<AgentMessageResponseV2> {
   const payload = {
     agent_id: agentId,
-    user_id: "Weslley",              // padrão por enquanto
+    user_id: "4b20d3cc-1aee-42f1-9930-4b0270de3075",              // padrão por enquanto
     session_id: sessionId ?? null,   // primeira mensagem vai null
     message: message,
   };
