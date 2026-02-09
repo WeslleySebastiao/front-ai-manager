@@ -43,11 +43,8 @@ export default function Sidebar() {
           {!collapsed && (
             <div className="min-w-0">
               <h1 className="text-gray-900 dark:text-white text-base font-bold leading-normal">
-                AI Platform
+                Coordina
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">
-                Management
-              </p>
             </div>
           )}
 

@@ -1,40 +1,73 @@
-// src/app/routes/Agentes/components/AgentForm.tsx
+// src/app/components/AgentForm.tsx
 import React, { useEffect, useState } from "react";
 import { getTools } from "../../services/toolService";
 
+// ──────────────────────────────────────────────
+// ✅ MUDANÇA: Mapa centralizado de modelos por provider.
+//
+// POR QUE: antes, todos os modelos apareciam independente do provider,
+// permitindo combinações inválidas (ex: Anthropic + GPT-4o).
+//
+// Agora usamos um objeto como "fonte única de verdade" (single source of truth).
+// Quando o provider muda, derivamos a lista de modelos a partir daqui.
+// Isso segue o princípio de "impossibilitar estados inválidos" ao invés
+// de apenas validá-los depois.
+//
+// Para adicionar um novo modelo ou provider no futuro, basta editar este objeto.
+// ──────────────────────────────────────────────
+const MODELS_BY_PROVIDER: Record<string, { value: string; label: string }[]> = {
+  openai: [
+    { value: "gpt-5.2", label: "GPT-5.2" },
+    { value: "gpt-5.2-pro", label: "GPT-5.2 Pro" },
+    { value: "gpt-5.1", label: "GPT-5.1" },
+    { value: "gpt-5-mini", label: "GPT-5 mini" },
+    { value: "gpt-4o", label: "GPT-4o" },
+    { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+  ],
+  anthropic: [
+    { value: "claude-3-sonnet", label: "Claude 3 Sonnet" },
+  ],
+  google: [
+    { value: "gemini-pro", label: "Gemini Pro" },
+  ],
+};
+
+// Lista de providers derivada do mapa (evita duplicação)
+const PROVIDERS = Object.keys(MODELS_BY_PROVIDER);
+
 export type AgentFormState = {
-    name: string;
-    description: string;
-    provider: string;
-    model: string;
-    tools: string[];
-    prompt: string;
-    temperature: number;
-    max_tokens: number;
+  name: string;
+  description: string;
+  provider: string;
+  model: string;
+  tools: string[];
+  prompt: string;
+  temperature: number;
+  max_tokens: number;
 };
 
 type Props = {
-    title: string;
-    submitLabel: string;
-    initialForm: AgentFormState;
-    loading?: boolean;
-    message?: string;
-    onSubmit: (form: AgentFormState) => Promise<void> | void;
-    dangerLabel?: string;
-    dangerDisabled?: boolean;
-    onDanger?: () => void;
+  title: string;
+  submitLabel: string;
+  initialForm: AgentFormState;
+  loading?: boolean;
+  message?: string;
+  onSubmit: (form: AgentFormState) => Promise<void> | void;
+  dangerLabel?: string;
+  dangerDisabled?: boolean;
+  onDanger?: () => void;
 };
 
 export default function AgentForm({
-    title,
-    submitLabel,
-    initialForm,
-    loading = false,
-    message = "",
-    onSubmit,
-    dangerLabel,
-    dangerDisabled = false,
-    onDanger,
+  title,
+  submitLabel,
+  initialForm,
+  loading = false,
+  message = "",
+  onSubmit,
+  dangerLabel,
+  dangerDisabled = false,
+  onDanger,
 }: Props) {
   const [toolsAvailable, setToolsAvailable] = useState<
     { id: string; label: string; description?: string; icon?: string }[]
@@ -47,16 +80,49 @@ export default function AgentForm({
     setForm(initialForm);
   }, [initialForm]);
 
+  // ──────────────────────────────────────────────
+  // ✅ MUDANÇA: Derivar modelos disponíveis a partir do provider selecionado.
+  //
+  // Usamos um valor computado (não estado separado) porque a lista de modelos
+  // é uma função direta do provider — armazená-la em estado separado criaria
+  // risco de dessincronização.
+  // ──────────────────────────────────────────────
+  const availableModels = MODELS_BY_PROVIDER[form.provider] ?? [];
+
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) {
     const { name, value } = e.target;
-
-    // mantém números como string no input, mas converte no submit
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }) as any);
+  }
+
+  // ──────────────────────────────────────────────
+  // ✅ MUDANÇA: Handler específico para troca de provider.
+  //
+  // Quando o provider muda, precisamos verificar se o modelo atual
+  // pertence ao novo provider. Se não pertencer, resetamos para o
+  // primeiro modelo disponível. Isso evita estado inconsistente.
+  //
+  // Separamos em um handler próprio (em vez de tratar tudo no handleChange)
+  // porque a lógica de cascata é específica dessa relação provider→modelo.
+  // Isso segue o Single Responsibility Principle.
+  // ──────────────────────────────────────────────
+  function handleProviderChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newProvider = e.target.value;
+    const newModels = MODELS_BY_PROVIDER[newProvider] ?? [];
+
+    // Verifica se o modelo atual existe no novo provider
+    const currentModelExists = newModels.some((m) => m.value === form.model);
+
+    setForm((prev) => ({
+      ...prev,
+      provider: newProvider,
+      // Se o modelo atual não existe no novo provider, usa o primeiro disponível
+      model: currentModelExists ? prev.model : (newModels[0]?.value ?? ""),
+    }));
   }
 
   function handleToolToggle(tool: string) {
@@ -95,7 +161,6 @@ export default function AgentForm({
   const handleInternalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // normaliza números aqui
     const normalized: AgentFormState = {
       ...form,
       name: form.name ?? "",
@@ -151,7 +216,7 @@ export default function AgentForm({
           />
         </div>
 
-        {/* Provider */}
+        {/* Provider — agora usa handleProviderChange para cascata */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Provider
@@ -159,16 +224,19 @@ export default function AgentForm({
           <select
             name="provider"
             value={form.provider}
-            onChange={handleChange}
+            onChange={handleProviderChange}
             className="mt-1 w-full p-3 rounded-lg border border-gray-300 dark:border-[#3b4354] bg-background-light dark:bg-[#101622] text-gray-900 dark:text-white"
           >
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic</option>
-            <option value="google">Google</option>
+            {PROVIDERS.map((p) => (
+              <option key={p} value={p}>
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* Modelo */}
+        {/* ✅ MUDANÇA: Modelo agora é filtrado pelo provider selecionado.
+            A lista vem de `availableModels`, que é derivada do mapa MODELS_BY_PROVIDER. */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Modelo
@@ -179,14 +247,11 @@ export default function AgentForm({
             onChange={handleChange}
             className="mt-1 w-full p-3 rounded-lg border border-gray-300 dark:border-[#3b4354] bg-background-light dark:bg-[#101622] text-gray-900 dark:text-white"
           >
-            <option value="gpt-5.2">GPT-5.2</option>
-            <option value="gpt-5.2-pro">GPT-5.2 Pro</option>
-            <option value="gpt-5.1">GPT-5.1</option>
-            <option value="gpt-5-mini">GPT-5 mini</option>
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-            <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-            <option value="gemini-pro">Gemini Pro</option>
+            {availableModels.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -282,25 +347,24 @@ export default function AgentForm({
 
         {/* Botão e Mensagem */}
         <div className="flex justify-end gap-3">
-            {onDanger && (
-                <button 
-                    type="button" 
-                    disabled={dangerDisabled || loading} 
-                    onClick={onDanger} 
-                    className="px-6 py-3 rounded-lg border border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50"
-                >
-                    {dangerLabel ?? "Excluir"}
-                </button>
-                )
-            }     
-
+          {onDanger && (
             <button
-                type="submit"
-                disabled={loading}
-                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-all disabled:opacity-50"
+              type="button"
+              disabled={dangerDisabled || loading}
+              onClick={onDanger}
+              className="px-6 py-3 rounded-lg border border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50"
             >
-                {loading ? "Salvando..." : submitLabel}
+              {dangerLabel ?? "Excluir"}
             </button>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-all disabled:opacity-50"
+          >
+            {loading ? "Salvando..." : submitLabel}
+          </button>
         </div>
 
         {message && (
