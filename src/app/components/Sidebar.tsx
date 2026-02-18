@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import UserMenu from './UserMenu'
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(true)
@@ -96,6 +97,8 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </nav>
+
+        <UserMenu collapsed={collapsed} />
       </div>
     </aside>
   )
