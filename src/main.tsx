@@ -1,7 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { AuthProvider } from './context/authContext'
+import ProtectedRoute from './app/components/ProtectedRoute'
 import AppLayout from './app/layout/AppLayout'
+import Login from './app/routes/login'
 import Dashboard from './app/routes/Dashboard'
 import Agentes from './app/routes/Agentes/Agentes'
 import CriarNovoAgente from './app/routes/Agentes/CriarNovoAgente'
@@ -11,9 +14,20 @@ import PRReviews from './app/routes/PRReviews/PRReviews'
 import './index.css'
 
 const router = createBrowserRouter([
+  // ✅ Rota pública: Login
+  {
+    path: '/login',
+    element: <Login />,
+  },
+
+  // ✅ Rotas protegidas: tudo dentro do AppLayout
   {
     path: '/',
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'agentes', element: <Agentes /> },
@@ -27,6 +41,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </React.StrictMode>
 )
