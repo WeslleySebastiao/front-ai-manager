@@ -4,8 +4,6 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './context/authContext'
 import ProtectedRoute from './app/components/ProtectedRoute'
 import AppLayout from './app/layout/AppLayout'
-import LandingPage from './app/routes/LandingPage'
-import ResumePage from './app/routes/ResumePage'
 import Login from './app/routes/login'
 import Dashboard from './app/routes/Dashboard'
 import Agentes from './app/routes/Agentes/Agentes'
@@ -16,35 +14,27 @@ import PRReviews from './app/routes/PRReviews/PRReviews'
 import './index.css'
 
 const router = createBrowserRouter([
-  // ── Páginas públicas ───────────────────────────────────────────────────
-  {
-    path: '/',
-    element: <LandingPage />,
-  },
-  {
-    path: '/resume',
-    element: <ResumePage />,
-  },
+  // ✅ Rota pública: Login
   {
     path: '/login',
     element: <Login />,
   },
 
-  // ── App protegido (requer autenticação) ───────────────────────────────
+  // ✅ Rotas protegidas: tudo dentro do AppLayout
   {
-    path: '/app',
+    path: '/',
     element: (
       <ProtectedRoute>
         <AppLayout />
       </ProtectedRoute>
     ),
     children: [
-      { index: true,                    element: <Dashboard />       },
-      { path: 'agentes',                element: <Agentes />         },
-      { path: 'agentes/novo',           element: <CriarNovoAgente /> },
-      { path: 'agentes/:id/editar',     element: <EditarAgente />    },
-      { path: 'agentes/:id',            element: <AgentChat />       },
-      { path: 'pr-reviews',             element: <PRReviews />       },
+      { index: true, element: <Dashboard /> },
+      { path: 'agentes', element: <Agentes /> },
+      { path: 'agentes/novo', element: <CriarNovoAgente /> },
+      { path: 'agentes/:id/editar', element: <EditarAgente /> },
+      { path: 'agentes/:id', element: <AgentChat /> },
+      { path: 'pr-reviews', element: <PRReviews /> },
     ],
   },
 ])

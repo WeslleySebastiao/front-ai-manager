@@ -6,11 +6,11 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(true)
 
   const navItems = [
-    { label: 'Dashboard',  icon: 'dashboard',  href: '/app'            },
-    { label: 'Agentes',    icon: 'smart_toy',  href: '/app/agentes', exact: true },
-    { label: 'Novo Agente',icon: 'add_circle', href: '/app/agentes/novo'   },
-    { label: 'PR Reviews', icon: 'construction',href: '/app/pr-reviews'   },
-    { label: 'Em breve',   icon: 'settings',   href: '/app/configuracoes' },
+    { label: 'Dashboard', icon: 'dashboard', href: '/' },
+    { label: 'Agentes', icon: 'smart_toy', href: '/agentes', exact: true },
+    { label: 'Novo Agente', icon: 'add_circle', href: '/agentes/novo' },
+    { label: 'PR Reviews', icon: 'construction', href: '/pr-reviews' },
+    { label: 'Em breve', icon: 'settings', href: '/configuracoes' },
   ]
 
   return (
@@ -28,7 +28,8 @@ export default function Sidebar() {
         {/* Header + botão colapsar */}
         <div
           className={`
-            px-3 py-2 flex gap-3
+            px-3 py-2
+            flex gap-3
             ${collapsed ? 'flex-col items-center' : 'flex-row items-center'}
           `}
         >
@@ -51,12 +52,15 @@ export default function Sidebar() {
           <button
             className={`
               inline-flex items-center justify-center
-              rounded-lg border border-gray-200 dark:border-white/10
+              rounded-lg border
+              border-gray-200 dark:border-white/10
               text-gray-700 dark:text-gray-200
               hover:bg-gray-100 dark:hover:bg-white/10
-              transition-colors size-9
+              transition-colors
+              size-9
               ${collapsed ? '' : 'ml-auto'}
             `}
+
             onClick={() => setCollapsed((v) => !v)}
             aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
             title={collapsed ? 'Expandir' : 'Colapsar'}
@@ -67,6 +71,7 @@ export default function Sidebar() {
           </button>
         </div>
 
+
         {/* Nav */}
         <nav className="flex flex-col gap-1 mt-4">
           {navItems.map((item) => (
@@ -74,7 +79,7 @@ export default function Sidebar() {
               key={item.href}
               to={item.href}
               end={item.exact}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? item.label : undefined} // ajuda quando colapsado
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium leading-normal transition-colors
                 ${collapsed ? 'justify-center' : ''}
@@ -86,6 +91,8 @@ export default function Sidebar() {
               }
             >
               <span className="material-symbols-outlined shrink-0">{item.icon}</span>
+
+              {/* label some quando colapsado */}
               {!collapsed && <p>{item.label}</p>}
             </NavLink>
           ))}
