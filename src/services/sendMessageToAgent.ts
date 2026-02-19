@@ -1,5 +1,4 @@
 import api from "./api";
-import { supabase } from "../lib/supabase";
 
 export interface AgentMessageResponseV2 {
   response: string;
@@ -11,22 +10,18 @@ export async function sendMessageToAgent(
   message: string,
   sessionId?: string | null
 ): Promise<AgentMessageResponseV2> {
-  // ✅ Pega o user_id real da sessão do Supabase
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? null;
-
-  if (!userId) {
-    throw new Error("Usuário não autenticado.");
-  }
-
   const payload = {
     agent_id: agentId,
-    user_id: userId,
-    session_id: sessionId ?? null,
+    user_id: "4b20d3cc-1aee-42f1-9930-4b0270de3075",              // padrão por enquanto
+    session_id: sessionId ?? null,   // primeira mensagem vai null
     message: message,
   };
 
+  console.log("📤 Payload enviado ao backend:", payload);
+
   const { data } = await api.post("/agent/run/v2", payload);
 
-  return data;
+  console.log("📥 Resposta RAW do backend:", data);
+
+  return data; // { response, session_id }
 }
